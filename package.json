@@ -1,0 +1,43 @@
+{
+  "name": "coinbase_siwe",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "biome check .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ceramicnetwork/common": "^5.15.0",
+    "@composedb/client": "^0.7.1",
+    "@composedb/types": "^0.7.1",
+    "@didtools/cacao": "^3.0.1",
+    "@didtools/pkh-ethereum": "^0.5.0",
+    "@tanstack/react-query": "5.45.1",
+    "did": "^0.5.0",
+    "did-session": "^3.1.0",
+    "dids": "^5.0.2",
+    "key-did-resolver": "^4.0.0",
+    "multiformats": "^13.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "siwe": "^2.3.2",
+    "viem": "latest",
+    "wagmi": "latest"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.0",
+    "@ceramicnetwork/cli": "^5.16.0",
+    "@composedb/cli": "^0.7.1",
+    "@composedb/devtools-node": "^0.7.1",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@wagmi/cli": "latest",
+    "buffer": "^6.0.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}

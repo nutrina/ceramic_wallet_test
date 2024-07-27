@@ -1,0 +1,254 @@
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import type { Hex } from "viem";
+import { usePublicClient, useSignMessage } from "wagmi";
+import { SiweMessage } from "siwe";
+// import type { CeramicA } from "@ceramicnetwork/common";
+import { ComposeClient } from "@composedb/client";
+import { DID } from "dids";
+import { DIDSession } from "did-session";
+import { EthereumWebAuth, getAccountId } from "@didtools/pkh-ethereum";
+import { getResolver } from "key-did-resolver";
+import { CID } from "multiformats/cid";
+import { Cacao } from "@didtools/cacao";
+
+export const checkSignedPayload = async (
+  did: DID,
+  data: any
+): Promise<string | undefined> => {
+  console.log("geri: createSignedPayload ", did, data);
+  const { jws, cacaoBlock } = await did.createDagJWS(data);
+
+  console.log("geri: createSignedPayload ", jws, cacaoBlock);
+  if (!cacaoBlock) {
+    const msg = `Failed to create DagJWS for did: ${did.parent}`;
+    throw msg;
+  }
+
+  // Get the JWS & serialize it (this is what we would send to the BE)
+  const { link, payload, signatures } = jws;
+
+  const cacao = await Cacao.fromBlockBytes(cacaoBlock);
+  const issuer = cacao.p.iss;
+
+  /////////////////////////////////////////////////
+  try {
+    const cid = Array.from(link ? link.bytes : []);
+    const cacao = await Cacao.fromBlockBytes(cacaoBlock);
+
+    console.log("verifySignature 1");
+    const jws_restored = {
+      signatures: signatures,
+      payload: payload,
+      cid: CID.decode(new Uint8Array(cid)),
+    };
+
+    console.log("verifySignature 2");
+    const did = new DID({
+      resolver: getResolver(),
+    });
+
+    await did.verifyJWS(jws_restored, {
+      issuer: issuer,
+      capability: cacao,
+      disableTimecheck: true,
+    });
+    console.log("geri verifySignature OK");
+  } catch (e) {
+    console.log("geri verifySignature Exception: ", e);
+    return String(e);
+  }
+  /////////////////////////////////////////////////
+
+  // return {
+  //   signatures: signatures,
+  //   payload: payload,
+  //   cid: Array.from(link ? link.bytes : []),
+  //   cacao: Array.from(cacaoBlock ? cacaoBlock : []),
+  //   issuer,
+  // };
+  return "JWS verification is OK";
+};
+
+// Path to compiled composite
+import { definition } from "./definitions/my-composite";
+
+const compose = new ComposeClient({
+  ceramic: "http://localhost:7007",
+  definition,
+});
+
+const authenticateEthPKH = async (
+  ethProvider: any,
+  address: string
+): Promise<DIDSession | undefined> => {
+  console.log("authenticateEthPKH 1");
+  const sessionStr = localStorage.getItem("ceramic:eth_did"); // for production you will want a better place than localStorage for your sessions.
+  let session: DIDSession | undefined;
+
+  console.log("authenticateEthPKH 2");
+  if (sessionStr) {
+    session = await DIDSession.fromSession(sessionStr);
+    session = undefined;
+  }
+
+  console.log("authenticateEthPKH 3");
+  if (!session || (session.hasSession && session.isExpired)) {
+    // if (window.ethereum === null || window.ethereum === undefined) {
+    //   throw new Error("No injected Ethereum provider found.");
+    // }
+
+    console.log("authenticateEthPKH 4");
+    // We enable the ethereum provider to get the user's addresses.
+    // const ethProvider = window.ethereum;
+    // request ethereum accounts.
+    // const addresses = await ethProvider.enable({
+    //   method: "eth_requestAccounts",
+    // });
+    const accountId = await getAccountId(ethProvider, address);
+    const authMethod = await EthereumWebAuth.getAuthMethod(
+      ethProvider,
+      accountId
+    );
+
+    /**
+     * Create DIDSession & provide capabilities for resources that we want to access.
+     * @NOTE: The specific resources (ComposeDB data models) are provided through
+     * "compose.resources" below.
+     */
+
+    console.log("authenticateEthPKH 5");
+    session = await DIDSession.authorize(authMethod, {
+      resources: compose.resources,
+    });
+    console.log("session: ", session);
+    // Set the session in localStorage.
+    console.log("authenticateEthPKH 6");
+    localStorage.setItem("ceramic:eth_did", session.serialize());
+    return session;
+  }
+};
+
+export function SignInWithEthereum() {
+  const [signature, setSignature] = useState<Hex | undefined>(undefined);
+  const [valid, setValid] = useState<boolean | undefined>(undefined);
+  const client = usePublicClient();
+  const { signMessage } = useSignMessage({
+    mutation: { onSuccess: (sig) => setSignature(sig) },
+  });
+  const account = useAccount();
+
+  const message = useMemo(() => {
+    return new SiweMessage({
+      domain: document.location.host,
+      address: account.address,
+      chainId: account.chainId,
+      uri: document.location.origin,
+      version: "1",
+      statement: "Smart Wallet SIWE Example",
+      nonce: "12345678", // replace with nonce generated by your backend
+    });
+  }, []);
+
+  const checkValid = useCallback(async () => {
+    if (!signature || !account.address || !client) return;
+    const isValid = await client.verifyMessage({
+      address: account.address,
+      message: message.prepareMessage(),
+      signature,
+    });
+    setValid(isValid);
+  }, [signature, account]);
+
+  useEffect(() => {
+    checkValid();
+  }, [signature, account]);
+
+  const promptToSign = () => {
+    signMessage({ message: message.prepareMessage() });
+  };
+  return (
+    <div>
+      <h2>SIWE Example</h2>
+      <button onClick={promptToSign}>Sign In with Ethereum</button>
+      {signature && <p>Signature: {signature}</p>}
+      {valid !== undefined && <p>Is valid: {valid.toString()}</p>}
+    </div>
+  );
+}
+function App() {
+  const account = useAccount();
+  const { connectors, connect, status, error } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [didSession, setDidSession] = useState<string | undefined>(undefined);
+  const [signatureStatus, setSignatureStatus] = useState<string | undefined>(
+    undefined
+  );
+
+  const authenticateDid = useCallback(async () => {
+    const address = account.address;
+    const provider = account.connector
+      ? await account.connector.getProvider()
+      : undefined;
+
+    console.log("address ", address);
+    console.log("provider ", provider);
+    if (address && provider) {
+      const didSession = await authenticateEthPKH(provider, address);
+      setDidSession(didSession?.serialize());
+      setSignatureStatus("");
+
+      if (didSession) {
+        const signatureStatus = await checkSignedPayload(didSession.did, {
+          data: "payload",
+        });
+        setSignatureStatus(signatureStatus);
+      }
+    } else {
+      console.error("address, provider", address, provider);
+    }
+  }, [account]);
+
+  return (
+    <>
+      <div>
+        <h2>Account</h2>
+
+        <div>
+          status: {account.status}
+          <br />
+          addresses: {JSON.stringify(account.addresses)}
+          <br />
+          chainId: {account.chainId}
+        </div>
+
+        {account.status === "connected" && (
+          <button type="button" onClick={() => disconnect()}>
+            Disconnect
+          </button>
+        )}
+      </div>
+
+      <div>
+        <h2>Connect</h2>
+        {connectors.map((connector) => (
+          <button
+            key={connector.uid}
+            onClick={() => connect({ connector })}
+            type="button"
+          >
+            {connector.name}
+          </button>
+        ))}
+        <div>{status}</div>
+        <div>{error?.message}</div>
+      </div>
+      {/* <SignInWithEthereum /> */}
+      <button onClick={authenticateDid}>Authenticate DID</button>
+      <div>{didSession ? didSession : "Click the BUTTON!"}</div>
+      <div>{signatureStatus ? signatureStatus : ""}</div>
+    </>
+  );
+}
+
+export default App;

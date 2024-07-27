@@ -1,0 +1,34 @@
+{
+  "version": "1.1",
+  "models": {
+    "kjzl6hvfrbw6caejdsgagul3q9vu0v2bss1hojrrzaxxzmtj7iaenr7zkgl98l0": [
+      {
+        "jws": {
+          "payload": "AXESIBrjHCCZfqsZlvyA6P_6lpcZpMyWMQmmxaKth4DykwF1",
+          "signatures": [
+            {
+              "signature": "H1VdqQXC27eDHpVnW7ia6pEGonjCjgk9181DPbY7I8KyTWgeQjtab2l29gx8NEl02YRGw8tM5uLEvT3h4yrZCA",
+              "protected": "eyJhbGciOiJFZERTQSIsImtpZCI6ImRpZDprZXk6ejZNa3JqZHVTcXo4WHdXMVhzUHVockdqSzdwbUJKMlo0elNxeEhwYTdrdVpTazZDI3o2TWtyamR1U3F6OFh3VzFYc1B1aHJHaks3cG1CSjJaNHpTcXhIcGE3a3VaU2s2QyJ9"
+            }
+          ],
+          "link": "bafyreia24mocbgl6vmmzn7ea5d77vfuxdgsmzfrrbgtmlivnq6apfeybou"
+        },
+        "linkedBlock": "omRkYXRhqmRuYW1lbVNpbXBsZVByb2ZpbGVldmlld3OgZnNjaGVtYaVkdHlwZWZvYmplY3RnJHNjaGVtYXgsaHR0cHM6Ly9qc29uLXNjaGVtYS5vcmcvZHJhZnQvMjAyMC0xMi9zY2hlbWFocmVxdWlyZWSBa2Rpc3BsYXlOYW1lanByb3BlcnRpZXOha2Rpc3BsYXlOYW1lo2R0eXBlZnN0cmluZ2ltYXhMZW5ndGgYMmltaW5MZW5ndGgDdGFkZGl0aW9uYWxQcm9wZXJ0aWVz9Gd2ZXJzaW9uYzIuMGlpbnRlcmZhY2X0aXJlbGF0aW9uc6BqaW1wbGVtZW50c4BrZGVzY3JpcHRpb25yVmVyeSBiYXNpYyBwcm9maWxlb2FjY291bnRSZWxhdGlvbqFkdHlwZWZzaW5nbGVvaW1tdXRhYmxlRmllbGRzgGZoZWFkZXKjY3NlcGVtb2RlbGVtb2RlbFLOAQQBcXELAAlobW9kZWwtdjFrY29udHJvbGxlcnOBeDhkaWQ6a2V5Ono2TWtyamR1U3F6OFh3VzFYc1B1aHJHaks3cG1CSjJaNHpTcXhIcGE3a3VaU2s2Qw=="
+      }
+    ]
+  },
+  "indices": {
+    "kjzl6hvfrbw6caejdsgagul3q9vu0v2bss1hojrrzaxxzmtj7iaenr7zkgl98l0": []
+  },
+  "aliases": {
+    "kjzl6hvfrbw6caejdsgagul3q9vu0v2bss1hojrrzaxxzmtj7iaenr7zkgl98l0": "SimpleProfile"
+  },
+  "views": {
+    "account": {},
+    "root": {},
+    "models": {
+      "kjzl6hvfrbw6caejdsgagul3q9vu0v2bss1hojrrzaxxzmtj7iaenr7zkgl98l0": {}
+    }
+  },
+  "commonEmbeds": []
+}
